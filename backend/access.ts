@@ -1,5 +1,5 @@
-import { permissionsList } from './schemas/fields';
-import { ListAccessArgs } from './types';
+import { permissionsList } from "./schemas/fields";
+import { ListAccessArgs } from "./types";
 // At it's simplest, the access control returns a yes or no value depending on the users session
 
 export function isSignedIn({ session }: ListAccessArgs) {
@@ -19,7 +19,7 @@ const generatedPermissions = Object.fromEntries(
 export const permissions = {
   ...generatedPermissions,
   isAwesome({ session }: ListAccessArgs): boolean {
-    return session?.data.name.includes('wes');
+    return session?.data.name.includes("wes");
   },
 };
 
@@ -60,14 +60,13 @@ export const rules = {
     return { order: { user: { id: session.itemId } } };
   },
   canReadProducts({ session }: ListAccessArgs) {
-    if (!isSignedIn({ session })) {
-      return false;
-    }
+    if (!session) return { status: "AVAILABLE" }; // user should still be able to see products is not logged in
+
     if (permissions.canManageProducts({ session })) {
-      return true; // They can read everything!
+      return true;
     }
-    // They should only see available products (based on the status field)
-    return { status: 'AVAILABLE' };
+
+    return { OR: [{ user: { id: session.itemId } }, { status: "AVAILABLE" }] };
   },
   canManageUsers({ session }: ListAccessArgs) {
     if (!isSignedIn({ session })) {
